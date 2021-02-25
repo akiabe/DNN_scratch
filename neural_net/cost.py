@@ -85,6 +85,51 @@ init_x = np.array([-3.0, 4.0])
 x = gradient_descent(function, init_x=init_x, lr=0.1, step_num=100)
 print(x)
 
+def softmax(a):
+    c = np.max(a)
+    exp_a = np.exp(a - c)
+    sum_exp_a = np.sum(exp_a)
+    y = exp_a / sum_exp_a
+    return y
+
+def cross_entropy_error(y, t):
+    if y.ndim == 1:
+        t = t.reshape(1, t.size)
+        y = y.reshape(1, y.size)
+
+    if t.size == y.size:
+        t = t.argmax(axis=1)
+
+    batch_size = y.shape[0]
+    return -np.sum(np.log(y[np.arange(batch_size), t] + 1e-7)) / batch_size
+
+class simpleNet():
+    def __init__(self):
+        self.W = np.random.randn(2, 3)
+
+    def predict(self, x):
+        return np.dot(x, self.W)
+
+    def loss(self, x, t):
+        z = self.predict(x)
+        y = softmax(z)
+        loss = cross_entropy_error(y, t)
+
+        return loss
+
+net = simpleNet()
+print(net.W)
+
+x = np.array([0.6, 0.9])
+p = net.predict(x)
+print(p)
+print(np.argmax(p))
+
+t = np.array([0, 0, 1])
+print(net.loss(x, t))
+
+def
+
 
 
 
