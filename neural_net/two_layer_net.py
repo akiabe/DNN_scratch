@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib.pyplot as plt
+from dataset.mnist import load_mnist
 
 
 def sigmoid(x):
@@ -22,7 +24,6 @@ def cross_entropy_error(y, t):
 
     batch_size = y.shape[0]
     return -np.sum(np.log(y[np.arange(batch_size), t] + 1e-7)) / batch_size
-
 
 def numerical_gradient(f, x):
     h = 1e-4
@@ -93,20 +94,59 @@ class TwoLayerNet:
 
         return grads
 
-net = TwoLayerNet(input_size=784, hidden_size=100, output_size=10)
-print(net.params["W1"].shape)
-print(net.params["b1"].shape)
-print(net.params["W2"].shape)
-print(net.params["b2"].shape)
+    def gradient(self, x, t):
+        W1, W2 = self.params["W1"], self.params["W2"]
+        b1, b2 = self.params["b1"], self.params["b2"]
 
-x = np.random.rand(100, 784)
-t = np.random.randn(100, 10)
+        grads = {}
+        batch_num = x.shape[0]
 
-y = net.predict(x)
-print(y.shape)
+        a1 = np.dot(x, W1) + b1
+        z1 = sigmoid(a1)
+        a2 = np.dot(z1, W2) + b2
+        y = softmax(a2)
 
-grads = net.numerical_gradient(x, t)
-print(grads["W1"].shape)
-print(grads["b1"].shape)
-print(grads["W2"].shape)
-print(grads["b2"].shape)
+        dy = (y - t) / batch_num
+        grads["W2"] = np.dot(z1.T, dy)
+        grads["b2"] = np.sum(dy, axis=0)
+
+        dz1 = np.dot(dy, W2.T)
+        da1 = ((1.0 - sigmoid(a1)) * sigmoid(a1)) * dz1
+        grads["W1"] = np.dot(x.T, da1)
+        grads["b1"] = np.sum(da1, axis=0)
+
+        return grads
+
+
+(x_train, y_train), (x_test, y_test) = load_mnist(
+    normalise=True,
+    one_hot_label=True,
+)
+
+model = TwoLayerNet(
+    input_size=784,
+    hidden_size=50,
+    output_size=10,
+)
+
+iters_num = 10000
+train_size = x_train.shape[0]
+batch_size = 100
+learning_rate = 0.1
+iter_per_epoch = max(train_size / batch_size, 1)
+
+train_loss = []
+train_acc = []
+test_acc = []
+
+for i in range(iters_num):
+    batch_mask = np.random.choice(train_size, batch_size)
+    x_batch = x_train[batch_mask]
+    y_batch = y_train[batch_mask]
+
+    grad = model.gradient(x_batch, y_batch)
+
+    for key in ("W1", "b1", "W2", "b2"):
+        model.params[key] -= learning_rate * grad[key]
+
+    loss = model.loss(x_batch, y_batch)
