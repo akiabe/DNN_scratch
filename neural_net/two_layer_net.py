@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from dataset.mnist import load_mnist
+from mnist import load_mnist
 
 
 def sigmoid(x):
@@ -119,7 +119,7 @@ class TwoLayerNet:
 
 
 (x_train, y_train), (x_test, y_test) = load_mnist(
-    normalise=True,
+    normalize=True,
     one_hot_label=True,
 )
 
@@ -135,9 +135,9 @@ batch_size = 100
 learning_rate = 0.1
 iter_per_epoch = max(train_size / batch_size, 1)
 
-train_loss = []
-train_acc = []
-test_acc = []
+train_loss_list = []
+train_acc_list = []
+test_acc_list = []
 
 for i in range(iters_num):
     batch_mask = np.random.choice(train_size, batch_size)
@@ -150,3 +150,19 @@ for i in range(iters_num):
         model.params[key] -= learning_rate * grad[key]
 
     loss = model.loss(x_batch, y_batch)
+    train_loss_list.append(loss)
+
+    if i % iter_per_epoch == 0:
+        train_acc = model.accuracy(x_train, y_train)
+        test_acc = model.accuracy(x_test, y_test)
+        train_acc_list.append(train_acc)
+        test_acc_list.append(test_acc)
+        print(f"train acc: {train_acc:.4f}, test acc: {test_acc:.4f}")
+
+x = np.arange(len(train_acc_list))
+plt.plot(x, train_acc_list, label="train acc")
+plt.plot(x, test_acc_list, label="test acc", linestyle="--")
+plt.xlabel("epochs")
+plt.ylabel("accuracy")
+plt.legend()
+plt.show()
